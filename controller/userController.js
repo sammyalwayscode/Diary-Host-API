@@ -6,23 +6,31 @@ const jwt = require("jsonwebtoken");
 const signUpUser = async (req, res) => {
   try {
     const { userName, email, password } = req.body;
-    const cloudImage = await cloudinary.uploader.upload(req.file.path);
+    const oldUser = await usersModel.findOne({ email });
 
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(password, salt);
+    if (oldUser) {
+      res.status(404).json({
+        status: "User Already Exist",
+      });
+    } else {
+      const cloudImage = await cloudinary.uploader.upload(req.file.path);
 
-    const user = await usersModel.create({
-      userName,
-      email,
-      password: hashed,
-      avatar: cloudImage.secure_url,
-      avatarID: cloudImage.public_id,
-    });
+      const salt = await bcrypt.genSalt(10);
+      const hashed = await bcrypt.hash(password, salt);
 
-    res.status(201).json({
-      message: "User Created",
-      data: user,
-    });
+      const user = await usersModel.create({
+        userName,
+        email,
+        password: hashed,
+        avatar: cloudImage.secure_url,
+        avatarID: cloudImage.public_id,
+      });
+
+      res.status(201).json({
+        message: "User Created",
+        data: user,
+      });
+    }
   } catch (error) {
     res.status(404).json({
       status: "Failed to Create User",
@@ -39,8 +47,8 @@ const signInUser = async (req, res) => {
     if (user) {
       const checkPassword = await bcrypt.compare(password, user.password);
       if (checkPassword) {
-        const token = jwt.sign({ _id: user._id }, "itSabRIGhtdAy", {
-          expiresIn: "2d",
+        const token = jwt.sign({ _id: user._id }, process.env.SECRET_KEY, {
+          expiresIn: process.env.EXPIRES,
         });
         const { password, ...info } = user._doc;
         // const data1 = user._doc
