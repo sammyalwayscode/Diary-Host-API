@@ -47,8 +47,8 @@ const signInUser = async (req, res) => {
     if (user) {
       const checkPassword = await bcrypt.compare(password, user.password);
       if (checkPassword) {
-        const token = jwt.sign({ _id: user._id }, process.env.SECRET_KEY, {
-          expiresIn: process.env.EXPIRES,
+        const token = jwt.sign({ _id: user._id }, "itSabRIGhtdAy", {
+          expiresIn: "2d",
         });
         const { password, ...info } = user._doc;
         // const data1 = user._doc
